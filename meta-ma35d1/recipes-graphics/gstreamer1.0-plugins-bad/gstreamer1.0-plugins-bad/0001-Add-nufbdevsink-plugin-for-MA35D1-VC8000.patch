@@ -1,180 +1,47 @@
-From 0c6a48d3d8ccd497ba9f0c79930e5f215e8a5d42 Mon Sep 17 00:00:00 2001
-From: Jacky Huang <ychuang3@nuvoton.com>
-Date: Mon, 22 May 2023 15:37:06 +0800
-Subject: [PATCH] Add nufbdevsink plugin for MA35D1 VC8000.
-
+From c30fc416354ba5532f03dc45fe126b3fee2301f0 Mon Sep 17 00:00:00 2001
+From: schung <schung@nuvoton.com>
+Date: Wed, 29 Oct 2025 08:35:18 +0800
+Subject: [PATCH] Add nufbdevsink plugin for MA35D1 VC8000
+Upstream-Status: Inappropriate [Nuvoton MA35D1 specific plugin, not suitable for upstream]
 ---
- config.h.in                  |    5 +-
- configure                    |    5 +
- configure.ac                 |    4 +-
  meson_options.txt            |    1 +
- sys/Makefile.am              |   10 +-
- sys/Makefile.in              |    6 +-
  sys/meson.build              |    1 +
  sys/nufbdev/Makefile.am      |   14 +
  sys/nufbdev/Makefile.in      | 1091 ++++++++++++++++++++++++++++++++++
  sys/nufbdev/gstnufbdevsink.c |  746 +++++++++++++++++++++++
  sys/nufbdev/gstnufbdevsink.h |  146 +++++
  sys/nufbdev/meson.build      |   24 +
- 12 files changed, 2047 insertions(+), 6 deletions(-)
+ 7 files changed, 2023 insertions(+)
  create mode 100644 sys/nufbdev/Makefile.am
  create mode 100644 sys/nufbdev/Makefile.in
  create mode 100644 sys/nufbdev/gstnufbdevsink.c
  create mode 100644 sys/nufbdev/gstnufbdevsink.h
  create mode 100644 sys/nufbdev/meson.build
 
-diff --git a/config.h.in b/config.h.in
-index ce4b064..e208804 100644
---- a/config.h.in
-+++ b/config.h.in
-@@ -227,7 +227,10 @@
- #undef HAVE_FAAD
- 
- /* Define to enable linux framebuffer (used by fbdevsink). */
--#undef HAVE_FBDEV
-+#define HAVE_FBDEV
-+
-+/* Define to enable Nuvoton VC8000 PP + linux framebuffer (used by nufbdevsink). */
-+#define HAVE_NUFBDEV
- 
- /* Define to 1 if you have the <fcntl.h> header file. */
- #undef HAVE_FCNTL_H
-diff --git a/configure b/configure
-index 1619f9e..cfc6742 100755
---- a/configure
-+++ b/configure
-@@ -873,6 +873,8 @@ FDK_AAC_LIBS
- FDK_AAC_CFLAGS
- USE_FBDEV_FALSE
- USE_FBDEV_TRUE
-+USE_NUFBDEV_FALSE
-+USE_NUFBDEV_TRUE
- USE_FAAD_FALSE
- USE_FAAD_TRUE
- FAAD_LIBS
-@@ -1695,6 +1697,7 @@ enable_resindvd
- enable_faac
- enable_faad
- enable_fbdev
-+enable_nufbdev
- enable_fdk_aac
- enable_flite
- enable_gsm
-@@ -2730,6 +2733,7 @@ Optional Features:
-   --disable-faac               disable AAC encoder plug-in: faac
-   --disable-faad               disable FAAD2 AAC decoder plug-in: faad
-   --disable-fbdev              disable linux framebuffer: fbdevsink
-+  --disable-nufbdev            disable Nuvoton VC8000 PP + linux framebuffer: nufbdevsink
-   --disable-fdk_aac            disable fdkaac plugin: fdkaac
-   --disable-flite              disable Flite plugin: flite
-   --disable-gsm                disable GSM library: gsmenc gsmdec
-@@ -95106,6 +95110,7 @@ do
-     "sys/dshowvideosink/Makefile") CONFIG_FILES="$CONFIG_FILES sys/dshowvideosink/Makefile" ;;
-     "sys/dvb/Makefile") CONFIG_FILES="$CONFIG_FILES sys/dvb/Makefile" ;;
-     "sys/fbdev/Makefile") CONFIG_FILES="$CONFIG_FILES sys/fbdev/Makefile" ;;
-+    "sys/nufbdev/Makefile") CONFIG_FILES="$CONFIG_FILES sys/nufbdev/Makefile" ;;
-     "sys/ipcpipeline/Makefile") CONFIG_FILES="$CONFIG_FILES sys/ipcpipeline/Makefile" ;;
-     "sys/kms/Makefile") CONFIG_FILES="$CONFIG_FILES sys/kms/Makefile" ;;
-     "sys/msdk/Makefile") CONFIG_FILES="$CONFIG_FILES sys/msdk/Makefile" ;;
-diff --git a/configure.ac b/configure.ac
-index 5712e73..a98c8d5 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -2351,7 +2351,8 @@ AM_CONDITIONAL(USE_EXIF, false)
- AM_CONDITIONAL(USE_RESINDVD, false)
- AM_CONDITIONAL(USE_FAAC, false)
- AM_CONDITIONAL(USE_FAAD, false)
--AM_CONDITIONAL(USE_FBDEV, false)
-+AM_CONDITIONAL(USE_FBDEV, true)
-+AM_CONDITIONAL(USE_NUFBDEV, true)
- AM_CONDITIONAL(USE_FDK_AAC, false)
- AM_CONDITIONAL(USE_FLITE, false)
- AM_CONDITIONAL(USE_FLUIDSYNTH, false)
-@@ -2602,6 +2603,7 @@ sys/dshowsrcwrapper/Makefile
- sys/dshowvideosink/Makefile
- sys/dvb/Makefile
- sys/fbdev/Makefile
-+sys/nufbdev/Makefile
- sys/ipcpipeline/Makefile
- sys/kms/Makefile
- sys/msdk/Makefile
 diff --git a/meson_options.txt b/meson_options.txt
-index 3a9aa93..c5ba956 100644
+index 6c8855a..09c1d5e 100644
 --- a/meson_options.txt
 +++ b/meson_options.txt
-@@ -95,6 +95,7 @@ option('dvb', type : 'feature', value : 'auto', description : 'DVB video bin and
+@@ -108,6 +108,7 @@ option('dvb', type : 'feature', value : 'auto', description : 'DVB video bin and
  option('faac', type : 'feature', value : 'auto', description : 'Free AAC audio encoder plugin')
- option('faad', type : 'feature', value : 'auto', description : 'Free AAC audio decoder plugin')
+ option('faad', type : 'feature', value : 'auto', description : 'Free AAC audio decoder plugin (GPL - only built if gpl option is also enabled!)')
  option('fbdev', type : 'feature', value : 'auto', description : 'Framebuffer video sink plugin')
 +option('nufbdev', type : 'feature', value : 'auto', description : 'Nuvoton VC8000 PP + Framebuffer video sink plugin')
  option('fdkaac', type : 'feature', value : 'auto', description : 'Fraunhofer AAC audio codec plugin')
  option('flite', type : 'feature', value : 'auto', description : 'Flite speech synthesizer source plugin')
  option('fluidsynth', type : 'feature', value : 'auto', description : 'Fluidsynth MIDI decoder plugin')
-diff --git a/sys/Makefile.am b/sys/Makefile.am
-index 42523b4..263c8e5 100644
---- a/sys/Makefile.am
-+++ b/sys/Makefile.am
-@@ -52,6 +52,12 @@ else
- FBDEV_DIR=
- endif
- 
-+if USE_NUFBDEV
-+NUFBDEV_DIR=nufbdev
-+else
-+NUFBDEV_DIR=
-+endif
-+
- if USE_IPCPIPELINE
- IPCPIPELINE_DIR=ipcpipeline
- else
-@@ -124,9 +130,9 @@ else
- MSDK_DIR=
- endif
- 
--SUBDIRS = $(ANDROID_MEDIA_DIR) $(APPLE_MEDIA_DIR) $(BLUEZ_DIR) $(D3DVIDEOSINK_DIR) $(DECKLINK_DIR) $(DIRECTSOUND_DIR) $(WINKS_DIR) $(DVB_DIR) $(FBDEV_DIR) $(IPCPIPELINE_DIR) $(KMS_DIR) $(OPENSLES_DIR) $(SHM_DIR) $(UVCH264_DIR) $(VDPAU_DIR) $(WININET_DIR) $(WINSCREENCAP_DIR) $(WASAPI_DIR) $(NVDEC_DIR) $(NVENC_DIR) $(TINYALSA_DIR) $(MSDK_DIR)
-+SUBDIRS = $(ANDROID_MEDIA_DIR) $(APPLE_MEDIA_DIR) $(BLUEZ_DIR) $(D3DVIDEOSINK_DIR) $(DECKLINK_DIR) $(DIRECTSOUND_DIR) $(WINKS_DIR) $(DVB_DIR) $(FBDEV_DIR) $(NUFBDEV_DIR) $(IPCPIPELINE_DIR) $(KMS_DIR) $(OPENSLES_DIR) $(SHM_DIR) $(UVCH264_DIR) $(VDPAU_DIR) $(WININET_DIR) $(WINSCREENCAP_DIR) $(WASAPI_DIR) $(NVDEC_DIR) $(NVENC_DIR) $(TINYALSA_DIR) $(MSDK_DIR)
- 
--DIST_SUBDIRS = androidmedia applemedia bluez d3dvideosink decklink directsound dvb fbdev ipcpipeline kms dshowdecwrapper dshowsrcwrapper dshowvideosink \
-+DIST_SUBDIRS = androidmedia applemedia bluez d3dvideosink decklink directsound dvb fbdev nufbdev ipcpipeline kms dshowdecwrapper dshowsrcwrapper dshowvideosink \
- 		opensles shm uvch264 vdpau wasapi winks winscreencap \
- 		nvdec nvenc tinyalsa msdk
- 
-diff --git a/sys/Makefile.in b/sys/Makefile.in
-index 2661f5d..30be4dd 100644
---- a/sys/Makefile.in
-+++ b/sys/Makefile.in
-@@ -732,6 +732,8 @@ wayland_scanner = @wayland_scanner@
- @USE_DIRECTSOUND_TRUE@DIRECTSOUND_DIR = directsound
- @USE_FBDEV_FALSE@FBDEV_DIR = 
- @USE_FBDEV_TRUE@FBDEV_DIR = fbdev
-+@USE_NUFBDEV_FALSE@NUFBDEV_DIR = 
-+@USE_NUFBDEV_TRUE@NUFBDEV_DIR = nufbdev
- @USE_IPCPIPELINE_FALSE@IPCPIPELINE_DIR = 
- @USE_IPCPIPELINE_TRUE@IPCPIPELINE_DIR = ipcpipeline
- @USE_KMS_FALSE@KMS_DIR = 
-@@ -756,8 +758,8 @@ wayland_scanner = @wayland_scanner@
- @USE_TINYALSA_TRUE@TINYALSA_DIR = tinyalsa
- @USE_MSDK_FALSE@MSDK_DIR = 
- @USE_MSDK_TRUE@MSDK_DIR = msdk
--SUBDIRS = $(ANDROID_MEDIA_DIR) $(APPLE_MEDIA_DIR) $(BLUEZ_DIR) $(D3DVIDEOSINK_DIR) $(DECKLINK_DIR) $(DIRECTSOUND_DIR) $(WINKS_DIR) $(DVB_DIR) $(FBDEV_DIR) $(IPCPIPELINE_DIR) $(KMS_DIR) $(OPENSLES_DIR) $(SHM_DIR) $(UVCH264_DIR) $(VDPAU_DIR) $(WININET_DIR) $(WINSCREENCAP_DIR) $(WASAPI_DIR) $(NVDEC_DIR) $(NVENC_DIR) $(TINYALSA_DIR) $(MSDK_DIR)
--DIST_SUBDIRS = androidmedia applemedia bluez d3dvideosink decklink directsound dvb fbdev ipcpipeline kms dshowdecwrapper dshowsrcwrapper dshowvideosink \
-+SUBDIRS = $(ANDROID_MEDIA_DIR) $(APPLE_MEDIA_DIR) $(BLUEZ_DIR) $(D3DVIDEOSINK_DIR) $(DECKLINK_DIR) $(DIRECTSOUND_DIR) $(WINKS_DIR) $(DVB_DIR) $(FBDEV_DIR) $(NUFBDEV_DIR) $(IPCPIPELINE_DIR) $(KMS_DIR) $(OPENSLES_DIR) $(SHM_DIR) $(UVCH264_DIR) $(VDPAU_DIR) $(WININET_DIR) $(WINSCREENCAP_DIR) $(WASAPI_DIR) $(NVDEC_DIR) $(NVENC_DIR) $(TINYALSA_DIR) $(MSDK_DIR)
-+DIST_SUBDIRS = androidmedia applemedia bluez d3dvideosink decklink directsound dvb fbdev nufbdev ipcpipeline kms dshowdecwrapper dshowsrcwrapper dshowvideosink \
- 		opensles shm uvch264 vdpau wasapi winks winscreencap \
- 		nvdec nvenc tinyalsa msdk
- 
 diff --git a/sys/meson.build b/sys/meson.build
-index ba717da..d67d57b 100644
+index cfe1778..234a57d 100644
 --- a/sys/meson.build
 +++ b/sys/meson.build
-@@ -9,6 +9,7 @@ subdir('directsound')
- #subdir('dshowvideosink')
+@@ -10,6 +10,7 @@ subdir('directsound')
+ subdir('directshow')
  subdir('dvb')
  subdir('fbdev')
 +subdir('nufbdev')
  subdir('ipcpipeline')
  subdir('kms')
- subdir('msdk')
+ subdir('magicleap')
 diff --git a/sys/nufbdev/Makefile.am b/sys/nufbdev/Makefile.am
 new file mode 100644
 index 0000000..f2e4bc4
@@ -1294,7 +1161,7 @@ index 0000000..0da09c5
 +.NOEXPORT:
 diff --git a/sys/nufbdev/gstnufbdevsink.c b/sys/nufbdev/gstnufbdevsink.c
 new file mode 100644
-index 0000000..7b67f5f
+index 0000000..bc982dc
 --- /dev/null
 +++ b/sys/nufbdev/gstnufbdevsink.c
 @@ -0,0 +1,746 @@
@@ -2227,5 +2094,5 @@ index 0000000..20ca11f
 +  pkgconfig.generate(gstnufbdevsink, install_dir : plugins_pkgconfig_install_dir)
 +endif
 -- 
-2.34.1
+2.25.1
 

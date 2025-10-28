@@ -8,7 +8,7 @@
 ## 1. For MA35D1 (numaker-som-ma35d16a81):
 ### 1.1. Initialize Yocto repository:
 ```console
-repo init -u https://github.com/schung1218/yocto-bmc-scarthgap.git -m meta-ma35d1/base/ma35d1-v1.1.xml
+repo init -u https://github.com/MA35D1/yocto-5.0.git -m meta-ma35d1/base/ma35d1.xml
 ```
 ```console
 repo sync

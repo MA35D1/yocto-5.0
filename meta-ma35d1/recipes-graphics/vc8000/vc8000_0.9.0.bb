@@ -10,7 +10,7 @@ S = "${WORKDIR}/git"
 B = "${WORKDIR}/build"
 
 SRC_URI += " \
-    file://ma35d1-vc8000.ko_5.10.140 \
+    file://ma35d1-vc8000.ko_6.6.93 \
     file://0001-Add_VC8000.patch \
     "
 

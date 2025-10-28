@@ -18,7 +18,7 @@ KERNEL_SRC ?= "git://github.com/OpenNuvoton/MA35D1_linux-6.6.y.git;branch=master
 SRC_URI = "${KERNEL_SRC}"
 SRCREV = "${KERNEL_SRCREV}"
 
-SRCBRANCH = "5.10.140"
+SRCBRANCH = "6.6.93"
 LOCALVERSION = "-${SRCBRANCH}"
 
 SRC_URI += " \
@@ -51,15 +51,6 @@ do_configure:prepend() {
     bbnote "Copying defconfig"
     cp ${S}/arch/${ARCH}/configs/${KERNEL_DEFCONFIG} ${WORKDIR}/defconfig
     cat ${WORKDIR}/cfg80211.config >> ${WORKDIR}/defconfig
-
-    for dtbf in ${KERNEL_DEVICETREE}; do
-        dt=$(echo $dtbf | sed 's/\.dtb/\.dts/')
-            if echo "${KERNEL_DEFCONFIG}" | grep -q "drm"; then
-                sed -i "s/ma35d1.dtsi/ma35d1-drm.dtsi/" ${S}/arch/${ARCH}/boot/dts/${dt}
-            else
-                sed -i "s/ma35d1-drm.dtsi/ma35d1.dtsi/" ${S}/arch/${ARCH}/boot/dts/${dt}
-            fi
-    done
 
     if [ "${TFA_LOAD_SCP}" = "yes" ]; then        
         if [ "${TFA_SCP_M4}" = "no" ]; then

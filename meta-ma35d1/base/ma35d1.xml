@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <manifest>
   <default sync-j="2"/>
-  <remote fetch="https://github.com/schung1218" name="nuvoton"/>
+  <remote fetch="https://github.com/MA35D1" name="nuvoton"/>
   <remote fetch="https://git.yoctoproject.org" name="yocto"/>
   <remote fetch="https://github.com/openembedded" name="oe"/>
   <remote fetch="https://github.com/meta-qt5" name="qt"/>
-  <project remote="nuvoton" name="yocto-scarthgap" revision="master" path="sources"/>
-  <project remote="yocto" revision="eaf8ce9d39a2c0d9c42b32fb6596ab4302f93a1a" name="poky" path="sources/poky"/>
-  <project remote="oe" revision="05dcac98473402d87e0af73bbc2c5a6a840abe93" name="meta-openembedded" path="sources/meta-openembedded"/>
-  <project remote="qt" revision="fe0bf7f0e5408aac6cc89ff3b19b1b1941df4f64" name="meta-qt5" upstream="scarthgap" path="sources/meta-qt5"/>
+  <project remote="nuvoton" name="yocto-5.0" revision="master" path="sources"/>
+  <project remote="yocto" revision="aee2a47dd999c89811647260db4170e821c04733" name="poky" path="sources/poky"/>
+  <project remote="oe" revision="b8d1a14f7f3b76457c36752202ea7ae5881b6654" name="meta-openembedded" path="sources/meta-openembedded"/>
+  <project remote="qt" revision="eb828418264a49b8d00035cb3d7b12fcea3be801" name="meta-qt5" upstream="scarthgap" path="sources/meta-qt5"/>
+
 </manifest>

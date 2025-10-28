@@ -15,7 +15,7 @@ include conf/machine/include/arm/armv8a/tune-cortexa35.inc
 # =========================================================================
 PREFERRED_PROVIDER_virtual/kernel = "linux-ma35d1"
 PREFERRED_PROVIDER_kernel = "linux-ma35d1"
-MODULE_VERISON = "5.10.140"
+MODULE_VERISON = "6.6.93"
 
 # =========================================================================
 # u-boot
