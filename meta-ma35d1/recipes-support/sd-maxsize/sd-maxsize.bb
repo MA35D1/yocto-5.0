@@ -19,4 +19,4 @@ do_install() {
            ${D}${systemd_unitdir}/system/resize.service
 }
 
-FILES_${PN} = "${systemd_unitdir}/system/resize.service /etc/resize.sh"
+FILES:${PN} = "${systemd_unitdir}/system/resize.service /etc/resize.sh"
